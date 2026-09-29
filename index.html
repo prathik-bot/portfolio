@@ -1,0 +1,445 @@
+<title>Prathik Kumar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Design plan ──────────────────────────────────────────────
+     Layout: an "instrument panel" — a fixed mono status bar,
+     a two-column readout hero, tick-mark section dividers, project
+     entries as dated log records, activities as a dense ledger.
+     Semantic AQI colors are reserved for the legend swatches only,
+     never used as the page accent. ------------------------------ */
+  :root{
+    --bg:#efece4; --surface:#ffffff; --ink:#211d18; --muted:#6b6459;
+    --line: rgba(33,29,24,0.14); --accent:#a15a2e; --accent-ink:#ffffff; --accent-2:#3f6e64;
+    --font-display:'Fraunces', ui-serif, Georgia, serif;
+    --font-body:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1712; --surface:#221d17; --ink:#f1ece1; --muted:#a89f8f;
+      --line: rgba(241,236,225,0.14); --accent:#e08a4f; --accent-ink:#1b1712; --accent-2:#7fb0a3;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#1b1712; --surface:#221d17; --ink:#f1ece1; --muted:#a89f8f;
+    --line: rgba(241,236,225,0.14); --accent:#e08a4f; --accent-ink:#1b1712; --accent-2:#7fb0a3;
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--font-body);
+    font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
+    padding-inline:20px;
+  }
+  a{color:var(--accent);}
+  img{max-width:100%; display:block;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; text-wrap:balance; margin:0;}
+  .mono{font-family:var(--font-mono);}
+  .wrap{max-width:1080px; margin-inline:auto;}
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* status bar */
+  .statusbar{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+    background:var(--bg); border-bottom:1px solid var(--line);
+    margin-inline:-20px; padding-inline:20px;
+  }
+  .statusbar-inner{
+    max-width:1080px; margin-inline:auto; display:flex; align-items:center; justify-content:space-between;
+    gap:12px; padding-block:12px; font-family:var(--font-mono); font-size:13px;
+  }
+  .statusbar-name{font-weight:600; letter-spacing:.02em;}
+  .statusbar-links{display:flex; gap:18px; flex-wrap:wrap;}
+  .statusbar-links a{color:var(--ink); text-decoration:none; border-bottom:1px solid transparent;}
+  .statusbar-links a:hover{border-color:var(--accent); color:var(--accent);}
+  .theme-toggle{
+    font-family:var(--font-mono); font-size:12px; background:none; border:1px solid var(--line);
+    color:var(--ink); border-radius:3px; padding:5px 9px; cursor:pointer;
+  }
+  .theme-toggle:hover{border-color:var(--accent);}
+
+  /* hero */
+  .hero{padding-block:64px 40px; display:grid; grid-template-columns:1.2fr .8fr 1fr; gap:32px; align-items:end;}
+  .hero-photo{margin:0; border:1px solid var(--line); border-radius:2px; overflow:hidden; align-self:start;}
+  .hero-photo img{width:100%; height:100%; object-fit:cover; aspect-ratio:3/4;}
+  .tbd{background:var(--accent); color:var(--accent-ink); padding:1px 6px; border-radius:2px; font-size:.85em;}
+  .hero h1{font-size:clamp(2.4rem,5.4vw,4rem); line-height:1.02; letter-spacing:-.01em;}
+  .hero .role{margin-block-start:16px; font-size:1.15rem; color:var(--muted); max-width:46ch;}
+  .hero .thesis{margin-block-start:22px; font-size:1.05rem; max-width:52ch;}
+  .readout{
+    background:var(--surface); border:1px solid var(--line); border-radius:2px; padding:18px 20px;
+    font-family:var(--font-mono); font-size:13px;
+  }
+  .readout-row{display:flex; justify-content:space-between; gap:12px; padding-block:8px; border-bottom:1px dashed var(--line);}
+  .readout-row:last-child{border-bottom:none;}
+  .readout-row .k{color:var(--muted);}
+  .readout-row .v{text-align:right; font-variant-numeric:tabular-nums;}
+
+  /* section scaffolding */
+  section{padding-block:52px; border-top:1px solid var(--line);}
+  .section-head{display:flex; align-items:baseline; gap:16px; margin-block-end:30px; flex-wrap:wrap;}
+  .section-head .idx{font-family:var(--font-mono); font-size:13px; color:var(--muted);}
+  .section-head h2{font-size:clamp(1.5rem,3vw,2.1rem);}
+  .ticks{height:10px; background:
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 24px);
+    margin-block-end:34px;}
+
+  /* about */
+  .about-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:40px;}
+  .about-grid p{max-width:62ch;}
+  .about-grid p + p{margin-block-start:14px;}
+  .edu-card{background:var(--surface); border:1px solid var(--line); padding:20px; border-radius:2px;}
+  .edu-card .school{font-family:var(--font-display); font-size:1.2rem; font-weight:600;}
+  .edu-card .meta{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); margin-block-start:6px;}
+
+  /* experience ledger */
+  .ledger{border-top:1px solid var(--line);}
+  .ledger-row{
+    display:grid; grid-template-columns:120px 1fr; gap:20px; padding-block:20px;
+    border-bottom:1px solid var(--line);
+  }
+  .ledger-row .when{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); padding-top:3px;}
+  .ledger-row h3{font-size:1.15rem; font-weight:600;}
+  .ledger-row .org{font-family:var(--font-mono); font-size:12.5px; color:var(--accent-2); margin-block:4px 8px;}
+  .ledger-row p{max-width:64ch; color:var(--ink);}
+  .ledger-row ul{margin:0; padding-inline-start:18px; max-width:64ch; color:var(--ink); display:flex; flex-direction:column; gap:6px;}
+  .ledger-row li::marker{color:var(--accent-2);}
+
+  /* projects */
+  .project{margin-block-end:56px;}
+  .project:last-child{margin-block-end:0;}
+  .project-head{display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; margin-block-end:10px;}
+  .project-head h3{font-size:1.6rem;}
+  .project-tag{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+    background:var(--accent); color:var(--accent-ink); padding:4px 9px; border-radius:2px; white-space:nowrap;}
+  .project-stack{font-family:var(--font-mono); font-size:12px; color:var(--muted); margin-block-end:16px;}
+  .project-body{display:grid; grid-template-columns:1fr; gap:22px;}
+  .project p{max-width:70ch;}
+  .shot-row{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-block-start:8px;}
+  .shot-row img, .photo-row img{border:1px solid var(--line); border-radius:2px; width:100%; height:100%; object-fit:cover;}
+  .photo-row{display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:10px; margin-block-start:8px;}
+  .photo-row .tall{grid-row:span 2;}
+  figcaption, .cap{font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-block-start:6px;}
+  .callout{
+    border-left:2px solid var(--accent); padding-inline-start:14px; margin-block-start:16px;
+    font-size:.95rem; color:var(--ink);
+  }
+  .callout .k{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); display:block; margin-block-end:4px;}
+
+  /* AQI legend */
+  .legend{display:flex; flex-wrap:wrap; gap:8px; margin-block:16px;}
+  .legend span{
+    font-family:var(--font-mono); font-size:11px; padding:5px 8px; border-radius:2px; color:#1a1a1a;
+  }
+
+  /* awards ledger table */
+  .awards{width:100%; border-collapse:collapse; font-size:.95rem;}
+  .awards th{
+    text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); font-weight:500; padding-block:10px; border-bottom:1px solid var(--line);
+  }
+  .awards td{padding-block:14px; border-bottom:1px solid var(--line); vertical-align:top;}
+  .awards td.y{font-family:var(--font-mono); font-size:12.5px; color:var(--muted); white-space:nowrap; padding-inline-end:16px;}
+  .awards td.name{font-weight:600; min-width:0;}
+  .awards td.desc{color:var(--muted); min-width:0;}
+
+  /* skills / activities chips */
+  .chipset{display:flex; flex-wrap:wrap; gap:8px; margin-block-start:8px;}
+  .chip{font-family:var(--font-mono); font-size:12px; border:1px solid var(--line); padding:5px 10px; border-radius:2px; color:var(--ink);}
+
+  footer{padding-block:44px 60px; border-top:1px solid var(--line);}
+  .footer-grid{display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;}
+  .footer-grid h2{font-size:1.8rem; max-width:20ch;}
+  .contact-list{font-family:var(--font-mono); font-size:13.5px; display:flex; flex-direction:column; gap:8px;}
+  .copy-btn{
+    font-family:var(--font-mono); font-size:11px; border:1px solid var(--line); background:none; color:var(--ink);
+    border-radius:2px; padding:2px 7px; margin-inline-start:8px; cursor:pointer;
+  }
+  .copy-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .foot-note{font-family:var(--font-mono); font-size:11.5px; color:var(--muted); margin-block-start:30px;}
+
+  @media (max-width: 760px){
+    .hero{grid-template-columns:1fr; gap:28px; padding-block:44px 30px;}
+    .hero-photo{order:-1; max-width:220px;}
+    .about-grid{grid-template-columns:1fr;}
+    .ledger-row{grid-template-columns:1fr; gap:6px;}
+    .shot-row{grid-template-columns:1fr 1fr;}
+    .photo-row{grid-template-columns:1fr 1fr;}
+    .photo-row .tall{grid-row:auto;}
+    .footer-grid{flex-direction:column; align-items:flex-start;}
+    .awards td.desc{display:none;}
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .reveal{animation: rise .5s ease both;}
+    @keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+  }
+</style>
+
+<div class="statusbar">
+  <div class="statusbar-inner">
+    <span class="statusbar-name">PRATHIK KUMAR<span style="color:var(--muted)">// portfolio</span></span>
+    <div class="statusbar-links">
+      <a href="#about">about</a>
+      <a href="#experience">experience</a>
+      <a href="#projects">projects</a>
+      <a href="#awards">awards</a>
+      <a href="#contact">contact</a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle color theme">☾/☀</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero" style="border-top:none;">
+    <div>
+      <p class="eyebrow">UCLA · Computer Science &amp; Engineering</p>
+      <h1>Prathik Kumar</h1>
+      <p class="role">I've built sensing and prediction devices to create systems people can trust and rely on. I'm interested in system design and machine learning projects.</p>
+    </div>
+    <figure class="hero-photo reveal">
+      <img src="assets/portrait.jpg" alt="Portrait of Prathik Kumar">
+    </figure>
+    <div class="readout reveal">
+      <div class="readout-row"><span class="k">STATUS</span><span class="v">UCLA CS&amp;E '29</span></div>
+      <div class="readout-row"><span class="k">GPA</span><span class="v">4.78 (HS)</span></div>
+      <div class="readout-row"><span class="k">RESEARCH</span><span class="v">Dr. Spada Air Quality Lab</span></div>
+      <div class="readout-row"><span class="k">AWARD</span><span class="v">Synopsys SF 2025 — Winner</span></div>
+      <div class="readout-row"><span class="k">SWE</span><span class="v">HeyBlue!, 2024</span></div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="section-head"><span class="idx">01</span><h2>About</h2></div>
+    <div class="ticks"></div>
+    <div class="about-grid">
+      <div>
+        <p>I'm studying Computer Science &amp; Engineering at UCLA, out of Monta Vista High School in Cupertino. Most of my projects start the same way: a measurement problem that doesn't have a clean answer yet — what tomorrow's air quality will be, which direction a sound is coming from, how a drought will progress — and I build the model or the circuit that gets closer to one.</p>
+        <p>Outside of research and code, I hold a first-degree black belt in Taekwondo, served as Director of Curriculum for my high school's Data Science Club, founded CS4Youth to bring programming to younger students, and play mridangam. I like problems that force me to work across a full stack, from an amplifier circuit up to a trained neural network.</p>
+      </div>
+      <div class="edu-card">
+        <p class="eyebrow" style="margin-block-end:10px;">Education</p>
+        <div class="school">University of California, Los Angeles</div>
+        <div class="meta">B.S. Computer Science &amp; Engineering · 2026 – 2029</div>
+        <div style="height:16px;"></div>
+        <div class="school" style="font-size:1.05rem;">Monta Vista High School</div>
+        <div class="meta">GPA 4.78 · Cupertino, CA · Class of 2026</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience">
+    <div class="section-head"><span class="idx">02</span><h2>Experience</h2></div>
+    <div class="ticks"></div>
+    <div class="ledger">
+      <div class="ledger-row">
+        <div class="when">Jun 2025 –<br>Jan 2026</div>
+        <div>
+          <h3>Research Intern</h3>
+          <div class="org">Dr. Spada Air Quality Research Lab · Vallejo, CA</div>
+          <ul>
+            <li>Built a cross-platform air quality monitoring app (Android + web) covering Vallejo, CA, visualizing PM2.5, black carbon, TVOC, and wind speed from the PurpleAir sensor API</li>
+            <li>Developed an interactive map viewer with layered visualizations, allowing users to view pollutant parameters individually or in combination</li>
+            <li>Converted raw sensor readings into standardized AQI values by researching and implementing EPA-style conversion formulas</li>
+            <li>Delivered findings directly to community partners, shaping feature priorities for the lab's next development phase and giving residents actionable environmental-risk insight</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="when">Apr 2024 –<br>Sep 2024</div>
+        <div>
+          <h3>Software Engineering Intern</h3>
+          <div class="org">Hey Blue! (Police and Community Interaction App) · Remote</div>
+          <ul>
+            <li>Increased active users by 30x by shipping core React Native features on Android, including real-time validation and a Firestore-based profile-completion flow</li>
+            <li>Redesigned the Connection History screen, eliminating a blank-screen bug and broken back button that were driving user drop-off, and rebuilt it on Firebase for real-time sync</li>
+            <li>Diagnosed and fixed a recurring app crash from unhandled image URL failures, stabilizing the settings screen</li>
+            <li>Built role-based UI logic enabling police officer accounts to select roles via Firestore, supporting the workflow of the app</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ledger-row">
+        <div class="when">Jul –<br>Aug 2025</div>
+        <div>
+          <h3>California State Summer School for Math. and Science (COSMOS)</h3>
+          <div class="org">Circuit Design, C · UC Davis</div>
+          <ul>
+            <li>Designed and coded analog and digital semiconductor circuits through hands-on labs; built a sound-triggered digital emergency alert system</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="section-head"><span class="idx">03</span><h2>Featured Projects</h2></div>
+    <div class="ticks"></div>
+
+    <div class="project">
+      <div class="project-head">
+        <h3>Smart AQI Forecasting</h3>
+        <span class="project-tag">Synopsys 2025 — Winner</span>
+      </div>
+      <div class="project-stack mono">LSTM · Open-Meteo weather API · carbon emissions data · Flask + TensorFlow · Next.js dashboard</div>
+      <div class="project-body">
+        <p><em>Leveraging Weather Data and Carbon Emissions for Enhanced Predictions with IoT Integration.</em> An LSTM model trained on historical weather and carbon-emissions data to forecast local Air Quality Index up to seven days out. I deployed the model behind a Flask API and built a dashboard on top of it showing live AQI, a color-coded severity legend, and a rolling forecast — screenshots below are from the dashboard running against live data.</p>
+        <div class="legend">
+          <span style="background:#68b34c;color:#0c1a0c">0–50 Good</span>
+          <span style="background:#f3d94e;color:#332b00">51–100 Moderate</span>
+          <span style="background:#f29a3c;color:#331d00">101–150 Sensitive Groups</span>
+          <span style="background:#e0554b;color:#2b0a07">151–200 Unhealthy</span>
+          <span style="background:#8f4bb0;color:#1c0a24">201–300 Very Unhealthy</span>
+          <span style="background:#7a3934;color:#f1ece1">301–500 Hazardous</span>
+        </div>
+        <div class="shot-row">
+          <figure style="margin:0;">
+            <img src="assets/aqi-dashboard-1.png" alt="AQI dashboard showing the seven-day forecast chart and AQI color index legend" loading="lazy">
+            <figcaption>Seven-day AQI forecast + color index legend</figcaption>
+          </figure>
+          <figure style="margin:0;">
+            <img src="assets/aqi-dashboard-2.png" alt="AQI dashboard showing today's predicted AQI and the underlying feature data" loading="lazy">
+            <figcaption>Today's predicted AQI and input features</figcaption>
+          </figure>
+          <figure style="margin:0;">
+            <img src="assets/aqi-dashboard-3.png" alt="AQI dashboard showing historic AQI data as a color-coded bar chart" loading="lazy">
+            <figcaption>Historic AQI, color-coded by severity</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="project">
+      <div class="project-head">
+        <h3>Sound-Following Emergency Robot</h3>
+        <span class="project-tag">COSMOS Cluster 8</span>
+      </div>
+      <div class="project-stack mono">Dual-microphone array · custom PCB · inverting amplifiers + low-pass filters · PWM motor control</div>
+      <div class="project-body">
+        <p>Built with Shubhay Choubey during COSMOS at UC Davis: a robot that locates and drives toward the source of a sound, aimed at emergency situations where finding someone by voice or an alarm matters — a call for help, a smoke detector, a person who can't be seen but can be heard. Two microphones feed a custom PCB with inverting-amplifier and low-pass-filter stages we designed ourselves; the board compares the signal arriving at each mic, and a proportional turning algorithm steers the motors toward the louder side, with logic to detect and correct when the source is behind the robot.</p>
+        <div class="photo-row">
+          <div class="tall"><img src="assets/robot-hero.jpg" alt="The sound-following robot chassis with its custom microphone PCB mounted on top" loading="lazy"></div>
+          <img src="assets/robot-pcb.jpg" alt="The custom PCB with dual microphones, amplifier, and filter circuitry" loading="lazy">
+          <img src="assets/robot-body.jpg" alt="The robot's motor and wheel assembly" loading="lazy">
+          <img src="assets/robot-pcb-closeup.jpg" alt="Close-up of the PCB's amplifier and filter stages" loading="lazy">
+          <img src="assets/robot-antenna.jpg" alt="Wiring used to improve the microphones' directional pickup" loading="lazy">
+        </div>
+        <div class="callout">
+          <span class="k">Challenges &amp; next steps</span>
+          Our first microphones were faulty and had to be replaced mid-build, and without wired antennas the directional pickup was inconsistent — sound source direction was harder to resolve cleanly than the circuit theory suggested. Backward-source detection also needed extra tuning to behave reliably. Wiring in proper antennas and refining that backward-detection logic are the two changes we'd make first.
+        </div>
+      </div>
+    </div>
+
+    <div class="project">
+      <div class="project-head">
+        <h3>Predicting Drought Conditions</h3>
+        <span class="project-tag">Independent</span>
+      </div>
+      <div class="project-stack mono">LSTM · time-series climate data</div>
+      <div class="project-body">
+        <p>An LSTM-based model for forecasting drought conditions from historical climate time series, applying the same sequence-modeling approach behind my AQI work to a longer-horizon environmental prediction problem.</p>
+      </div>
+    </div>
+
+    <div class="project">
+      <div class="project-head">
+        <h3>Emergency Contact Device for the Elderly</h3>
+        <span class="project-tag">Independent</span>
+      </div>
+      <div class="project-stack mono">Arduino · single-button interface</div>
+      <div class="project-body">
+        <p>A standalone Arduino-based device that lets an elderly user reach a pre-set emergency contact with a single action, designed for situations where reaching for a phone and navigating it isn't realistic — a fall, a medical episode, a moment of confusion. The goal was to strip the interface down to the one thing that matters in an emergency: get help, immediately, without a menu in the way.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="awards">
+    <div class="section-head"><span class="idx">04</span><h2>Awards &amp; Activities</h2></div>
+    <div class="ticks"></div>
+    <table class="awards">
+      <thead>
+        <tr><th>Year</th><th>Name</th><th>Detail</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="y">2025</td><td class="name">Synopsys Science Fair — Winner</td><td class="desc">Smart AQI Forecasting project</td></tr>
+        <tr><td class="y">2025</td><td class="name">Synopsys ACM Award</td><td class="desc">Recognition from the ACM at Synopsys Science Fair</td></tr>
+        <tr><td class="y">—</td><td class="name">USACO Silver</td><td class="desc">USA Computing Olympiad, Silver division</td></tr>
+        <tr><td class="y">—</td><td class="name">Model UN — Commendation</td><td class="desc">Committee commendation for delegate performance</td></tr>
+        <tr><td class="y">—</td><td class="name">President's Volunteer Service Award — Silver</td><td class="desc">Recognized for sustained community service hours</td></tr>
+        <tr><td class="y">—</td><td class="name">CS4Youth — Founder &amp; President</td><td class="desc">Founded a club teaching programming fundamentals to younger students</td></tr>
+        <tr><td class="y">—</td><td class="name">MV Data Science Club — Director of Curriculum</td><td class="desc">Directed the club's data science curriculum and projects at Monta Vista HS</td></tr>
+        <tr><td class="y">—</td><td class="name">Rosetta Cancer Research Workshop</td><td class="desc">Workshop on computational approaches to cancer research</td></tr>
+        <tr><td class="y">—</td><td class="name">Taekwondo — 1st Degree Black Belt</td><td class="desc">&nbsp;</td></tr>
+        <tr><td class="y">—</td><td class="name">Badminton — Junior Varsity</td><td class="desc">&nbsp;</td></tr>
+        <tr><td class="y">—</td><td class="name">Mridangam</td><td class="desc">South Indian classical percussion</td></tr>
+        <tr><td class="y">—</td><td class="name">R Programming — Coursera</td><td class="desc">Completed coursework in R for statistical computing</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer id="contact">
+    <div class="footer-grid">
+      <h2>Let's talk about air, sound, or anything in between.</h2>
+      <div class="contact-list">
+        <div>EMAIL &nbsp; <span id="emailText">kumprathik@gmail.com</span><button class="copy-btn" id="copyEmail" type="button">copy</button></div>
+        <div>LINKEDIN &nbsp; <a href="https://linkedin.com/in/prathik-kumar" target="_blank" rel="noopener">linkedin.com/in/prathik-kumar</a></div>
+        <div>PHONE &nbsp; <span id="phoneText">(650) 417-1083</span><button class="copy-btn" id="copyPhone" type="button">copy</button></div>
+      </div>
+    </div>
+    <div class="foot-note">Prathik Kumar · UCLA '29</div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var btn = document.getElementById('themeToggle');
+  try{
+    var saved = localStorage.getItem('pk-theme');
+    if(saved) root.setAttribute('data-theme', saved);
+  }catch(e){}
+  btn.addEventListener('click', function(){
+    var current = root.getAttribute('data-theme');
+    var isDark = current ? current === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = isDark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try{ localStorage.setItem('pk-theme', next); }catch(e){}
+  });
+
+  function wireCopy(btnId, targetId){
+    var copyBtn = document.getElementById(btnId);
+    copyBtn.addEventListener('click', function(){
+      var target = document.getElementById(targetId);
+      var text = target.textContent;
+      function fallback(){
+        var range = document.createRange();
+        range.selectNode(target);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){
+          copyBtn.textContent = 'copied';
+          setTimeout(function(){ copyBtn.textContent = 'copy'; }, 1500);
+        }).catch(fallback);
+      } else {
+        fallback();
+      }
+    });
+  }
+  wireCopy('copyEmail', 'emailText');
+  wireCopy('copyPhone', 'phoneText');
+})();
+</script>
